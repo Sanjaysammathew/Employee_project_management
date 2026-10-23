@@ -12,6 +12,17 @@ class EmployeeService:
     async def create_employee(self, data: EmployeeCreate) -> Employee:
         return await self.repository.create_employee(data)
 
+    async def delete_employee(self, employee_id: int) -> Employee:
+        employee = await self.repository.delete_employee(employee_id)
+
+        if employee is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Employee not found",
+            )
+
+        return employee
+
     async def assign_projects(
         self, employee_id: int, project_ids: list[int]
     ) -> Employee:

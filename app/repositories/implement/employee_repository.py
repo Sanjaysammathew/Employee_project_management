@@ -10,7 +10,7 @@ from app.schemas.employee_schema import EmployeeCreate
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 
-class SqlAlchemyEmployeeRepository(EmployeeInterface):
+class EmployeeRepository(EmployeeInterface):
     def __init__(self, db: AsyncSession):
         self.db = db
 
@@ -19,6 +19,8 @@ class SqlAlchemyEmployeeRepository(EmployeeInterface):
             employee = Employee(
                 name=data.name,
                 salary=data.salary,
+                email=data.email,
+                department=data.department,
             )
 
             self.db.add(employee)
@@ -34,12 +36,33 @@ class SqlAlchemyEmployeeRepository(EmployeeInterface):
                 detail=str(er),
             ) from er
 
+    async def delete_employee(self, employee_id: int) -> Employee | None:
+        try:
+            statement = (
+                select(Employee)
+                .options(selectinload(Employee.projects))
+                .where(Employee.id == employee_id)
+            )
+            result = await self.db.execute(statement)
+            employee = result.scalar_one_or_none()
+
+            if employee is None:
+                return None
+
+            await self.db.delete(employee)
+            await self.db.commit()
+            return employee
+
+        except SQLAlchemyError as er:
+            await self.db.rollback()
+            raise HTTPException(
+                status_code=500,
+                detail=str(er),
+            ) from er
+
     async def assign_projects(
         self, employee_id: int, project_ids: list[int]
     ) -> Employee | None:
-        # Load the current collection before replacing it. Otherwise SQLAlchemy
-        # may try to lazy-load it during assignment, which is unsupported with
-        # AsyncSession outside an awaited query.
         try:
             statement = (
                 select(Employee)

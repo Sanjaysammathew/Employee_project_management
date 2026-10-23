@@ -4,7 +4,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config.database import get_db
 from app.dependencies import get_employee_service
 from app.repositories.interface.employee_interface import EmployeeInterface
-from app.repositories.implement.employee_repository import SqlAlchemyEmployeeRepository
 from app.schemas.employee_schema import (
     EmployeeCreate,
     EmployeeCreated,
@@ -22,6 +21,15 @@ async def create_employee(
     service: EmployeeService = Depends(get_employee_service),
 ):
     return await service.create_employee(data)
+
+
+@router.delete("/{employee_id}")
+async def delete_employee(
+    employee_id: int,
+    service: EmployeeService = Depends(get_employee_service),
+):
+    await service.delete_employee(employee_id)
+    return {"message": "Employee deleted successfully"}
 
 
 @router.put("/{employee_id}/projects", response_model=EmployeeResponse)

@@ -9,6 +9,10 @@ class EmployeeInterface(ABC):
         pass
 
     @abstractmethod
+    async def delete_employee(self, employee_id: int) -> Any:
+        pass
+
+    @abstractmethod
     async def assign_projects(self, employee_id: int, project_ids: list[int]) -> Any:
         pass
 

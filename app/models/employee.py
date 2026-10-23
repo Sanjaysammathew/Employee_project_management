@@ -25,8 +25,20 @@ class Employee(Base):
     )
 
     salary: Mapped[int] = mapped_column(
-        Numeric(10,2),
+        Numeric(10, 2),
         nullable=False,
+    )
+
+    email: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        unique=True,
+        index=True,
+    )
+
+    department: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
     )
 
     projects: Mapped[list["Projects"]] = relationship(

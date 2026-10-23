@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Integer, String
+from sqlalchemy import Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.config.database import Base
@@ -29,7 +29,10 @@ class Projects(Base):
         nullable=False,
     )
 
-    # credits: Mapped[int | None] = mapped_column(Integer)
+    status: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+    )
 
     employees: Mapped[list["Employee"]] = relationship(
         "Employee",

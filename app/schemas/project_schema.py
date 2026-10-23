@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict
 class ProjectCreate(BaseModel):
     title: str
     description: str | None = None
+    status: str | None = None
 
 
 class ProjectSummary(BaseModel):
@@ -19,3 +20,4 @@ class ProjectResponse(BaseModel):
     id: int
     title: str
     description: str | None
+    status: str | None = None
