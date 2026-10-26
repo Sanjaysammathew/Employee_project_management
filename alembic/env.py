@@ -10,6 +10,7 @@ from app.config.database import Base, settings
 from app.models.employee import Employee
 from app.models.projects import Projects
 from app.models.association import employee_project
+from app.models.user import User
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

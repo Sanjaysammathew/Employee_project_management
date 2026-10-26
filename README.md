@@ -23,5 +23,31 @@
 ## Run
 Always run from the project root:
 ```
-uvicorn app.main:app --reload
+uvicorn main:app --reload
 ```
+
+## Authentication
+
+Set these values in the root `.env` file. Use a unique random JWT secret of at
+least 32 characters, and do not commit `.env`:
+
+```
+JWT_SECRET_KEY=<at-least-32-character-random-secret>
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+```
+
+- `POST /auth/register` creates a user with a securely hashed password.
+- `POST /auth/login` accepts OAuth2 form fields (`username` and `password`); the
+  username field also accepts the registered email address.
+- `GET /auth/me` requires `Authorization: Bearer <access_token>`.
+- New accounts receive the `user` role. Use `require_roles("admin")` from
+  `app.auth_dependencies` to protect an endpoint; assign the `admin` role only
+  to trusted accounts using a controlled database operation.
+
+The role migration removes `users.created_at` and assigns existing accounts the
+`user` role. Back up the database before applying it.
+
+Use Swagger UI at `/docs` to try the endpoints. Registration and login do not
+require authentication, and the existing employee and project endpoints remain
+public.

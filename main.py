@@ -8,9 +8,11 @@ from app.config.database import engine, Base
 from app.models.employee import Employee
 from app.models.projects import Projects
 from app.models.association import employee_project
+from app.models.user import User
 
 from app.routers.employee_router import router as employee_router
 from app.routers.project_router import router as project_router
+from app.routers.auth_router import router as auth_router
 
 
 @asynccontextmanager
@@ -30,6 +32,7 @@ app = FastAPI(
 
 app.include_router(employee_router)
 app.include_router(project_router)
+app.include_router(auth_router)
 
 
 @app.get("/")

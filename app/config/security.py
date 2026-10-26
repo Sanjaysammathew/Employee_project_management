@@ -1,0 +1,61 @@
+from datetime import datetime, timedelta, timezone
+
+import jwt
+from pwdlib import PasswordHash
+
+from app.config.config import settings
+
+password_hash = PasswordHash.recommended()
+
+
+class JWTConfigurationError(Exception):
+    pass
+
+
+class InvalidAccessTokenError(Exception):
+    pass
+
+
+def hash_password(password: str) -> str:
+    return password_hash.hash(password)
+
+
+def verify_password(password: str, hashed_password: str) -> bool:
+    return password_hash.verify(password, hashed_password)
+
+
+def create_access_token(subject: str) -> str:
+    secret = settings.JWT_SECRET_KEY
+    if secret is None:
+        raise JWTConfigurationError("JWT_SECRET_KEY is not configured")
+
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(
+        minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+    return jwt.encode(
+        {"sub": subject, "iat": now, "exp": expires_at},
+        secret.get_secret_value(),
+        algorithm=settings.JWT_ALGORITHM,
+    )
+
+
+def decode_access_token(token: str) -> str:
+    secret = settings.JWT_SECRET_KEY
+    if secret is None:
+        raise JWTConfigurationError("JWT_SECRET_KEY is not configured")
+
+    try:
+        payload = jwt.decode(
+            token,
+            secret.get_secret_value(),
+            algorithms=[settings.JWT_ALGORITHM],
+            options={"require": ["exp", "sub"]},
+        )
+    except jwt.InvalidTokenError as exc:
+        raise InvalidAccessTokenError from exc
+
+    subject = payload.get("sub")
+    if not isinstance(subject, str) or not subject.isdecimal():
+        raise InvalidAccessTokenError
+    return subject
