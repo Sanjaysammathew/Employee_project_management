@@ -3,7 +3,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app.auth_dependencies import get_auth_service, get_current_user, require_roles
+from app.api.dependency.auth_dependencies import (
+    get_auth_service,
+    get_current_user,
+    require_roles,
+)
 from app.models.user import User
 from app.schemas.auth_schema import (
     LoginRequest,
@@ -16,7 +20,11 @@ from app.services.auth_service import AuthService
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@router.post("/register", response_model=UserResponse, status_code=201)
+@router.post(
+    "/register",
+    response_model=UserResponse,
+    status_code=201,
+)
 async def register(
     data: RegisterRequest,
     service: Annotated[AuthService, Depends(get_auth_service)],

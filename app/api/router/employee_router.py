@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.database import get_db
-from app.dependencies import get_employee_service
+from app.api.dependency.dependencies import get_employee_service
 from app.repositories.interface.employee_interface import EmployeeInterface
 from app.schemas.employee_schema import (
     EmployeeCreate,

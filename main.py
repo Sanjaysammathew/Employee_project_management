@@ -10,9 +10,9 @@ from app.models.projects import Projects
 from app.models.association import employee_project
 from app.models.user import User
 
-from app.routers.employee_router import router as employee_router
-from app.routers.project_router import router as project_router
-from app.routers.auth_router import router as auth_router
+from app.api.router.employee_router import router as employee_router
+from app.api.router.project_router import router as project_router
+from app.api.router.auth_router import router as auth_router
 
 
 @asynccontextmanager
