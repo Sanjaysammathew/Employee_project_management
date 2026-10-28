@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config.database import get_db
-from app.api.dependency.dependencies import get_project_service
-from app.repositories.interface.project_interface import ProjectInterface
-from app.schemas.project_schema import ProjectCreate, ProjectResponse
-from app.services.project_service import ProjectService
+from app.config import get_db
+from app.api.dependency import get_project_service
+from app.repositories.interface import ProjectInterface
+from app.schemas import ProjectCreate, ProjectResponse
+from app.services import ProjectService
 
 router = APIRouter(prefix="/projects", tags=["Projects"])
 

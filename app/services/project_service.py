@@ -1,8 +1,8 @@
 from fastapi import HTTPException
 
-from app.repositories.interface.project_interface import ProjectInterface
-from app.models.projects import Projects
-from app.schemas.project_schema import ProjectCreate
+from app.models import Projects
+from app.repositories.interface import ProjectInterface
+from app.schemas import ProjectCreate
 
 
 class ProjectService:

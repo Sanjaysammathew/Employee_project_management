@@ -3,10 +3,9 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
-from app.models.employee import Employee
-from app.models.projects import Projects
-from app.repositories.interface.employee_interface import EmployeeInterface
-from app.schemas.employee_schema import EmployeeCreate
+from app.models import Employee, Projects
+from app.repositories.interface import EmployeeInterface
+from app.schemas import EmployeeCreate
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 

@@ -1,15 +1,15 @@
 from fastapi import HTTPException
 
-from app.config.security import (
+from app.config import (
     JWTConfigurationError,
     create_access_token,
     hash_password,
     verify_password,
 )
-from app.models.user import User
-from app.repositories.implement.user_repository import DuplicateUserError
-from app.repositories.interface.user_interface import UserInterface
-from app.schemas.auth_schema import LoginRequest, RegisterRequest
+from app.models import User
+from app.repositories.implement import DuplicateUserError
+from app.repositories.interface import UserInterface
+from app.schemas import LoginRequest, RegisterRequest
 
 
 class AuthService:

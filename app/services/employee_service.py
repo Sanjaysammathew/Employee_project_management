@@ -1,8 +1,8 @@
 from fastapi import HTTPException
 
-from app.repositories.interface.employee_interface import EmployeeInterface
-from app.models.employee import Employee
-from app.schemas.employee_schema import EmployeeCreate
+from app.models import Employee
+from app.repositories.interface import EmployeeInterface
+from app.schemas import EmployeeCreate
 
 
 class EmployeeService:

@@ -2,17 +2,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.config.database import engine, Base
+from app import Base, engine
 
 # Import models so SQLAlchemy registers their tables.
-from app.models.employee import Employee
-from app.models.projects import Projects
-from app.models.association import employee_project
-from app.models.user import User
+from app.models import Employee, Projects, User, employee_project
 
-from app.api.router.employee_router import router as employee_router
-from app.api.router.project_router import router as project_router
-from app.api.router.auth_router import router as auth_router
+from app.api import auth_router, employee_router, project_router
 
 
 @asynccontextmanager

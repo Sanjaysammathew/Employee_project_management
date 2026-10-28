@@ -1,14 +1,11 @@
 from fastapi import Depends
 
-from app.config.database import get_db
-from app.repositories.interface.employee_interface import EmployeeInterface
-from app.repositories.interface.project_interface import ProjectInterface
-from app.repositories.implement.employee_repository import EmployeeRepository
-from app.repositories.implement.project_repository import ProjectRepository
-from app.services.employee_service import EmployeeService
+from app.config import get_db
+from app.repositories import EmployeeRepository, ProjectRepository
+from app.repositories.interface import EmployeeInterface, ProjectInterface
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.services.project_service import ProjectService
+from app.services import EmployeeService, ProjectService
 
 
 def get_employee_repository(

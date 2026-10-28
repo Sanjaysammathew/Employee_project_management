@@ -12,13 +12,8 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.pool import NullPool
-
-from app.config.database import Base, get_db
-from app.config.config import settings
-from app.models.association import employee_project
-from app.models.employee import Employee
-from app.models.projects import Projects
-from app.models.user import User
+from app.config import Base, get_db, settings
+from app.models import Employee, Projects, User, employee_project
 from main import app
 
 load_dotenv()
@@ -30,7 +25,7 @@ if not TEST_DATABASE_URL:
     raise RuntimeError("Set TEST_DATABASE_URL in your .env file")
 
 test_url = make_url(TEST_DATABASE_URL)
-app_url = make_url(settings.DATABASE_URL)
+app_url = make_url(settings.database_url)
 
 
 # 2. Create the test database engine and session factory

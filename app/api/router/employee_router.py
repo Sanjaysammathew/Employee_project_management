@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config.database import get_db
-from app.api.dependency.dependencies import get_employee_service
-from app.repositories.interface.employee_interface import EmployeeInterface
-from app.schemas.employee_schema import (
+from app.config import get_db
+from app.api.dependency import get_employee_service
+from app.repositories.interface import EmployeeInterface
+from app.schemas import (
     EmployeeCreate,
     EmployeeCreated,
     EmployeeResponse,
     AssignProjects,
 )
-from app.services.employee_service import EmployeeService
+from app.services import EmployeeService
 
 router = APIRouter(prefix="/employees", tags=["Employees"])
 

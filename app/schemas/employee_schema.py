@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.schemas.project_schema import ProjectSummary
+from app.schemas import ProjectSummary
 
 NAME = dict(min_length=3, max_length=100, strip_whitespace=True)
 SALARY = dict(gt=2_000, lt=100_000)

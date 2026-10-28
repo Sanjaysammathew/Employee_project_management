@@ -4,11 +4,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.association import employee_project
-from app.models.employee import Employee
-from app.models.projects import Projects
-from app.repositories.interface.project_interface import ProjectInterface
-from app.schemas.project_schema import ProjectCreate
+from app.models import Employee, Projects, employee_project
+from app.repositories.interface import ProjectInterface
+from app.schemas import ProjectCreate
 
 
 class ProjectRepository(ProjectInterface):

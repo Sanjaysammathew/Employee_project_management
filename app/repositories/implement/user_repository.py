@@ -2,8 +2,8 @@ from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.user import User
-from app.repositories.interface.user_interface import UserInterface
+from app.models import User
+from app.repositories.interface import UserInterface
 
 
 class DuplicateUserError(Exception):
