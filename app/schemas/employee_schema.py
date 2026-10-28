@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.schemas import ProjectSummary
 
@@ -17,7 +17,7 @@ class EmployeeCreated(BaseModel):
     id: int
     name: str = Field(**NAME)
     salary: float
-    email: str | None = None
+    email: EmailStr | None = None
     department: str | None = None
 
 
