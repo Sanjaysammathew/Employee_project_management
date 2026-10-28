@@ -45,9 +45,3 @@ JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
   `app.auth_dependencies` to protect an endpoint; assign the `admin` role only
   to trusted accounts using a controlled database operation.
 
-The role migration removes `users.created_at` and assigns existing accounts the
-`user` role. Back up the database before applying it.
-
-Use Swagger UI at `/docs` to try the endpoints. Registration and login do not
-require authentication, and the existing employee and project endpoints remain
-public.
