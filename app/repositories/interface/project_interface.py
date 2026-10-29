@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+from app.models import Projects
+
 
 class ProjectInterface(ABC):
     @abstractmethod
@@ -20,5 +22,5 @@ class ProjectInterface(ABC):
         pass
 
     @abstractmethod
-    async def delete_project(self, project_id: int) -> bool:
+    async def delete_project(self, project_id: int) -> Projects | None:
         pass

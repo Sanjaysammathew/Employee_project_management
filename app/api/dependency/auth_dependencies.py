@@ -1,15 +1,15 @@
 from collections.abc import Awaitable, Callable
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core import (
-    InvalidAccessTokenError,
-    JWTConfigurationError,
-    decode_access_token,
-)
+from app.core import decode_access_token
 from app.database import get_db
+from app.exceptions.custom_exceptions import (
+    ForbiddenError,
+    InvalidAccessTokenError,
+)
 from app.models import User
 from app.repositories import UserRepository
 from app.repositories.interface import UserInterface
@@ -37,27 +37,14 @@ async def get_current_user(
     token: str | None = Depends(oauth2_scheme),
     repository: UserInterface = Depends(get_user_repository),
 ) -> User:
-    unauthorized = HTTPException(
-        status_code=401,
-        detail="Invalid or missing access token",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
     if token is None:
-        raise unauthorized
+        raise InvalidAccessTokenError("Invalid or missing access token")
 
-    try:
-        subject = decode_access_token(token)
-    except InvalidAccessTokenError:
-        raise unauthorized from None
-    except JWTConfigurationError as exc:
-        raise HTTPException(
-            status_code=503,
-            detail="Authentication is not configured",
-        ) from exc
+    subject = decode_access_token(token)
 
     user = await repository.get_by_id(int(subject))
     if user is None:
-        raise unauthorized
+        raise InvalidAccessTokenError("Invalid or missing access token")
     return user
 
 
@@ -66,10 +53,7 @@ def require_roles(*allowed_roles: str) -> Callable[..., Awaitable[User]]:
         current_user: User = Depends(get_current_user),
     ) -> User:
         if current_user.role not in allowed_roles:
-            raise HTTPException(
-                status_code=403,
-                detail="You do not have permission to access this resource",
-            )
+            raise ForbiddenError()
         return current_user
 
     return check_user_role

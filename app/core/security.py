@@ -4,16 +4,12 @@ import jwt
 from pwdlib import PasswordHash
 
 from app.core.config import settings
+from app.exceptions.custom_exceptions import (
+    InvalidAccessTokenError,
+    JWTConfigurationError,
+)
 
 password_hash = PasswordHash.recommended()
-
-
-class JWTConfigurationError(Exception):
-    pass
-
-
-class InvalidAccessTokenError(Exception):
-    pass
 
 
 def hash_password(password: str) -> str:
@@ -52,10 +48,12 @@ def decode_access_token(token: str) -> str:
             algorithms=[settings.JWT_ALGORITHM],
             options={"require": ["exp", "sub"]},
         )
+    except jwt.ExpiredSignatureError as exc:
+        raise InvalidAccessTokenError("Access token has expired") from exc
     except jwt.InvalidTokenError as exc:
-        raise InvalidAccessTokenError from exc
+        raise InvalidAccessTokenError("The access token is invalid or expired") from exc
 
     subject = payload.get("sub")
     if not isinstance(subject, str) or not subject.isdecimal():
-        raise InvalidAccessTokenError
+        raise InvalidAccessTokenError("The access token is invalid or expired")
     return subject

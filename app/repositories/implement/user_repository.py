@@ -2,12 +2,9 @@ from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.exceptions.custom_exceptions import DatabaseError, DuplicateUserError
 from app.models import User
 from app.repositories.interface import UserInterface
-
-
-class DuplicateUserError(Exception):
-    pass
 
 
 class UserRepository(UserInterface):
@@ -15,21 +12,33 @@ class UserRepository(UserInterface):
         self.db = db
 
     async def get_by_identifier(self, identifier: str) -> User | None:
-        statement = select(User).where(
-            or_(User.username == identifier, User.email == identifier)
-        )
-        return await self.db.scalar(statement)
+        try:
+            statement = select(User).where(
+                or_(User.username == identifier, User.email == identifier)
+            )
+            return await self.db.scalar(statement)
+        except SQLAlchemyError as er:
+            await self.db.rollback()
+            raise DatabaseError() from er
 
     async def get_by_username_or_email(
         self, username: str, email: str
     ) -> User | None:
-        statement = select(User).where(
-            or_(User.username == username, User.email == email)
-        )
-        return await self.db.scalar(statement)
+        try:
+            statement = select(User).where(
+                or_(User.username == username, User.email == email)
+            )
+            return await self.db.scalar(statement)
+        except SQLAlchemyError as er:
+            await self.db.rollback()
+            raise DatabaseError() from er
 
     async def get_by_id(self, user_id: int) -> User | None:
-        return await self.db.get(User, user_id)
+        try:
+            return await self.db.get(User, user_id)
+        except SQLAlchemyError as er:
+            await self.db.rollback()
+            raise DatabaseError() from er
 
     async def create_user(
         self, username: str, email: str, password_hash: str
@@ -55,11 +64,13 @@ class UserRepository(UserInterface):
                     None,
                 )
             if constraint_name in {"uq_users_username", "uq_users_email"}:
-                raise DuplicateUserError from exc
-            raise
-        except SQLAlchemyError:
+                raise DuplicateUserError(
+                    "Username or email is already registered"
+                ) from exc
+            raise DatabaseError() from exc
+        except SQLAlchemyError as er:
             await self.db.rollback()
-            raise
+            raise DatabaseError() from er
 
     async def delete_user(self, user_id: int) -> User | None:
         try:
@@ -70,6 +81,6 @@ class UserRepository(UserInterface):
             await self.db.delete(user)
             await self.db.commit()
             return user
-        except SQLAlchemyError:
+        except SQLAlchemyError as er:
             await self.db.rollback()
-            raise
+            raise DatabaseError() from er

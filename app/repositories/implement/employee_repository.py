@@ -1,12 +1,15 @@
-from fastapi import HTTPException
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
+from app.exceptions.custom_exceptions import (
+    DatabaseError,
+    EmployeeAlreadyAssignedError,
+)
 from app.models import Employee, Projects
 from app.repositories.interface import EmployeeInterface
 from app.schemas import EmployeeCreate
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 
 class EmployeeRepository(EmployeeInterface):
@@ -30,10 +33,7 @@ class EmployeeRepository(EmployeeInterface):
 
         except SQLAlchemyError as er:
             await self.db.rollback()
-            raise HTTPException(
-                status_code=500,
-                detail=str(er),
-            ) from er
+            raise DatabaseError() from er
 
     async def delete_employee(self, employee_id: int) -> Employee | None:
         try:
@@ -54,10 +54,7 @@ class EmployeeRepository(EmployeeInterface):
 
         except SQLAlchemyError as er:
             await self.db.rollback()
-            raise HTTPException(
-                status_code=500,
-                detail=str(er),
-            ) from er
+            raise DatabaseError() from er
 
     async def assign_projects(
         self, employee_id: int, project_ids: list[int]
@@ -101,10 +98,7 @@ class EmployeeRepository(EmployeeInterface):
 
         except SQLAlchemyError as er:
             await self.db.rollback()
-            raise HTTPException(
-                status_code=500,
-                detail=str(er),
-            ) from er
+            raise DatabaseError() from er
 
     async def extend_project(
         self, employee_id: int, project_ids: list[int]
@@ -144,82 +138,83 @@ class EmployeeRepository(EmployeeInterface):
 
         except IntegrityError as er:
             await self.db.rollback()
-            raise HTTPException(
-                status_code=409,
-                detail="Employee is already assigned to one of these projects",
-            ) from er
+            raise EmployeeAlreadyAssignedError from er
 
         except SQLAlchemyError as er:
             await self.db.rollback()
-            raise HTTPException(
-                status_code=500,
-                detail=str(er),
-            ) from er
+            raise DatabaseError() from er
 
     async def get_employee_eager(self, employee_id: int) -> Employee | None:
-        statement = (
-            select(Employee)
-            .options(selectinload(Employee.projects))
-            .where(Employee.id == employee_id)
-        )
-
-        result = await self.db.execute(statement)
-
-        return result.scalar_one_or_none()
+        try:
+            statement = (
+                select(Employee)
+                .options(selectinload(Employee.projects))
+                .where(Employee.id == employee_id)
+            )
+            result = await self.db.execute(statement)
+            return result.scalar_one_or_none()
+        except SQLAlchemyError as er:
+            await self.db.rollback()
+            raise DatabaseError() from er
 
     async def get_employees_paginated(self, page: int, page_size: int):
-        offset = (page - 1) * page_size
+        try:
+            offset = (page - 1) * page_size
+            statement = (
+                select(Employee)
+                .options(selectinload(Employee.projects))
+                .order_by(Employee.id)
+                .offset(offset)
+                .limit(page_size)
+            )
+            result = await self.db.execute(statement)
+            employees = result.scalars().all()
 
-        # Fetch one page of employees and eagerly load their projects.
-        statement = (
-            select(Employee)
-            .options(selectinload(Employee.projects))
-            .order_by(Employee.id)
-            .offset(offset)
-            .limit(page_size)
-        )
+            count_statement = select(func.count()).select_from(Employee)
+            total = await self.db.scalar(count_statement)
 
-        result = await self.db.execute(statement)
-        employees = result.scalars().all()
-
-        # Total number of employees, not just this page.
-        count_statement = select(func.count()).select_from(Employee)
-        total = await self.db.scalar(count_statement)
-
-        return {
-            "items": employees,
-            "page": page,
-            "page_size": page_size,
-            "total": total or 0,
-            "pages": ((total or 0) + page_size - 1) // page_size,
-        }
+            return {
+                "items": employees,
+                "page": page,
+                "page_size": page_size,
+                "total": total or 0,
+                "pages": ((total or 0) + page_size - 1) // page_size,
+            }
+        except SQLAlchemyError as er:
+            await self.db.rollback()
+            raise DatabaseError() from er
 
     async def get_employees_with_join(self):
-        statement = (
-            select(
-                Employee.id.label("employee_id"),
-                Employee.name.label("employee_name"),
-                Employee.salary.label("salary"),
-                func.count(Projects.id).label("project_count"),
-                func.array_agg(Projects.title).label("project_titles"),
+        try:
+            statement = (
+                select(
+                    Employee.id.label("employee_id"),
+                    Employee.name.label("employee_name"),
+                    Employee.salary.label("salary"),
+                    func.count(Projects.id).label("project_count"),
+                    func.array_agg(Projects.title).label("project_titles"),
+                )
+                .join(Employee.projects)
+                .group_by(Employee.id, Employee.name, Employee.salary)
+                .having(func.count(Projects.id) > 0)
+                .order_by(Employee.id)
             )
-            .join(Employee.projects)
-            .group_by(Employee.id, Employee.name, Employee.salary)
-            .having(func.count(Projects.id) > 0)
-            .order_by(Employee.id)
-        )
 
-        result = await self.db.execute(statement)
-
-        return [dict(row._mapping) for row in result.all()]
+            result = await self.db.execute(statement)
+            return [dict(row._mapping) for row in result.all()]
+        except SQLAlchemyError as er:
+            await self.db.rollback()
+            raise DatabaseError() from er
 
     async def get_employees_with_joinload(self) -> list[Employee]:
-        statement = (
-            select(Employee)
-            .options(joinedload(Employee.projects))
-            .order_by(Employee.id)
-        )
-
-        result = await self.db.execute(statement)
-
-        return result.unique().scalars().all()
+        try:
+            statement = (
+                select(Employee)
+                .options(joinedload(Employee.projects))
+                .order_by(Employee.id)
+            )
+            result = await self.db.execute(statement)
+            return result.unique().scalars().all()
+        except SQLAlchemyError as er:
+            await self.db.rollback()
+            raise DatabaseError() from er

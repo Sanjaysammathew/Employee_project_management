@@ -1,9 +1,9 @@
-from fastapi import HTTPException
 from sqlalchemy import func, select, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.exceptions.custom_exceptions import DatabaseError
 from app.models import Employee, Projects, employee_project
 from app.repositories.interface import ProjectInterface
 from app.schemas import ProjectCreate
@@ -39,39 +39,39 @@ class ProjectRepository(ProjectInterface):
             await self.db.commit()
             return project
 
-        except RuntimeError:
+        except RuntimeError as er:
             await self.db.rollback()
-            raise
+            raise DatabaseError() from er
 
         except SQLAlchemyError as er:
             await self.db.rollback()
-            raise HTTPException(
-                status_code=500,
-                detail=str(er),
-            ) from er
+            raise DatabaseError() from er
 
     async def get_all_projects(self) -> list[Projects]:
-        statement = select(Projects).order_by(Projects.id)
-        result = await self.db.scalars(statement)
-        return list(result.all())
+        try:
+            statement = select(Projects).order_by(Projects.id)
+            result = await self.db.scalars(statement)
+            return list(result.all())
+        except SQLAlchemyError as er:
+            await self.db.rollback()
+            raise DatabaseError() from er
 
     async def get_project_employee_report(self) -> list[dict[str, object]]:
-        statement = (
-            select(
-                Projects.id.label("project_id"),
-                Projects.title,
-                Projects.status,
-                func.count(Employee.id).label("employee_count"),
-                func.array_agg(Employee.name)
-                .filter(Employee.id.is_not(None))
-                .label("employee_names"),
-            )
-            .outerjoin(Projects.employees)
-            .group_by(Projects.id, Projects.title, Projects.status)
-            .order_by(Projects.id)
-        )
-
         try:
+            statement = (
+                select(
+                    Projects.id.label("project_id"),
+                    Projects.title,
+                    Projects.status,
+                    func.count(Employee.id).label("employee_count"),
+                    func.array_agg(Employee.name)
+                    .filter(Employee.id.is_not(None))
+                    .label("employee_names"),
+                )
+                .outerjoin(Projects.employees)
+                .group_by(Projects.id, Projects.title, Projects.status)
+                .order_by(Projects.id)
+            )
             result = await self.db.execute(statement)
             return [
                 {
@@ -81,37 +81,32 @@ class ProjectRepository(ProjectInterface):
                 for row in result
             ]
         except SQLAlchemyError as er:
-            raise HTTPException(
-                status_code=500,
-                detail=str(er),
-            ) from er
+            await self.db.rollback()
+            raise DatabaseError() from er
 
     async def get_project_employee_count_report(self) -> list[dict[str, object]]:
-        employee_count = (
-            select(func.count(employee_project.c.employee_id))
-            .where(employee_project.c.project_id == Projects.id)
-            .scalar_subquery()
-        )
-        statement = (
-            select(
-                Projects.id.label("project_id"),
-                Projects.title,
-                Projects.status,
-                employee_count.label("employee_count"),
-            )
-            .order_by(Projects.id)
-        )
-
         try:
+            employee_count = (
+                select(func.count(employee_project.c.employee_id))
+                .where(employee_project.c.project_id == Projects.id)
+                .scalar_subquery()
+            )
+            statement = (
+                select(
+                    Projects.id.label("project_id"),
+                    Projects.title,
+                    Projects.status,
+                    employee_count.label("employee_count"),
+                )
+                .order_by(Projects.id)
+            )
             result = await self.db.execute(statement)
             return [dict(row._mapping) for row in result]
         except SQLAlchemyError as er:
-            raise HTTPException(
-                status_code=500,
-                detail=str(er),
-            ) from er
+            await self.db.rollback()
+            raise DatabaseError() from er
 
-    async def delete_project(self, project_id: int) -> bool:
+    async def delete_project(self, project_id: int) -> Projects | None:
         try:
             statement = (
                 select(Projects)
@@ -122,15 +117,12 @@ class ProjectRepository(ProjectInterface):
             project = result.scalar_one_or_none()
 
             if project is None:
-                return False
+                return None
 
             await self.db.delete(project)
             await self.db.commit()
-            return True
+            return project
 
         except SQLAlchemyError as er:
             await self.db.rollback()
-            raise HTTPException(
-                status_code=500,
-                detail=str(er),
-            ) from er
+            raise DatabaseError() from er

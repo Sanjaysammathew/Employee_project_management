@@ -1,5 +1,4 @@
-from fastapi import HTTPException
-
+from app.exceptions.custom_exceptions import ProjectNotFoundError
 from app.models import Projects
 from app.repositories.interface import ProjectInterface
 from app.schemas import ProjectCreate
@@ -24,8 +23,5 @@ class ProjectService:
     async def delete_project(self, project_id: int) -> None:
         deleted = await self.repository.delete_project(project_id)
 
-        if not deleted:
-            raise HTTPException(
-                status_code=404,
-                detail="Project not found",
-            )
+        if deleted is None:
+            raise ProjectNotFoundError

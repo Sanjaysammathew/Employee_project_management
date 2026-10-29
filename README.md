@@ -37,6 +37,10 @@ project-root/
 │   ├── database/
 │   │   ├── __init__.py
 │   │   └── database.py         # SQLAlchemy engine, sessions, Base, and get_db
+│   ├── exceptions/
+│   │   ├── __init__.py
+│   │   ├── custom_exceptions.py
+│   │   └── exception_handler.py # Central HTTP status mapping
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── association.py
@@ -60,11 +64,14 @@ project-root/
 │   │   ├── auth_schema.py
 │   │   ├── employee_schema.py
 │   │   └── project_schema.py
-│   └── services/
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── auth_service.py
+│   │   ├── employee_service.py
+│   │   └── project_service.py
+│   └── utils/
 │       ├── __init__.py
-│       ├── auth_service.py
-│       ├── employee_service.py
-│       └── project_service.py
+│       └── logging_config.py
 ├── alembic/
 │   ├── README
 │   ├── env.py
@@ -157,6 +164,10 @@ Interactive Swagger documentation is available at
   "message": "Application is running"
 }
 ```
+
+Application exception logs are written to `logs/app.log` with rotation; they
+are not propagated to the terminal. The `logs/` directory is created on
+startup and ignored by Git.
 
 ## Authentication
 

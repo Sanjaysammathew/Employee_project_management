@@ -2,8 +2,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.utils.logging_config import configure_logging
+
 from app.core import settings
 from app.database import Base, engine
+from app.exceptions.exception_handler import register_exception_handlers
 
 # Import models so SQLAlchemy registers their tables.
 from app.models import Employee, Projects, User, employee_project
@@ -14,6 +17,8 @@ from app.api import (
     health_router,
     project_router,
 )
+
+configure_logging()
 
 
 @asynccontextmanager
@@ -31,6 +36,8 @@ app = FastAPI(
     version=settings.APP_VERSION,
     lifespan=lifespan,
 )
+
+register_exception_handlers(app)
 
 app.include_router(employee_router)
 app.include_router(project_router)

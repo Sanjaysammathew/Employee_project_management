@@ -1,5 +1,7 @@
-from fastapi import HTTPException
-
+from app.exceptions.custom_exceptions import (
+    EmployeeNotFoundError,
+    NotFoundError,
+)
 from app.models import Employee
 from app.repositories.interface import EmployeeInterface
 from app.schemas import EmployeeCreate
@@ -16,10 +18,7 @@ class EmployeeService:
         employee = await self.repository.delete_employee(employee_id)
 
         if employee is None:
-            raise HTTPException(
-                status_code=404,
-                detail="Employee not found",
-            )
+            raise EmployeeNotFoundError
 
         return employee
 
@@ -29,10 +28,7 @@ class EmployeeService:
         employee = await self.repository.assign_projects(employee_id, project_ids)
 
         if employee is None:
-            raise HTTPException(
-                status_code=404,
-                detail="Employee or one or more projects not found",
-            )
+            raise NotFoundError("Employee or one or more projects not found")
 
         return employee
 
@@ -40,10 +36,7 @@ class EmployeeService:
         employee = await self.repository.get_employee_eager(employee_id)
 
         if employee is None:
-            raise HTTPException(
-                status_code=404,
-                detail="Employee not found",
-            )
+            raise EmployeeNotFoundError
 
         return employee
 
@@ -59,4 +52,7 @@ class EmployeeService:
     async def extend_project(
         self, employee_id: int, project_ids: list[int]
     ) -> Employee:
-        return await self.repository.extend_project(employee_id, project_ids)
+        employee = await self.repository.extend_project(employee_id, project_ids)
+        if employee is None:
+            raise NotFoundError("Employee or one or more projects not found")
+        return employee
