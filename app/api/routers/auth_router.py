@@ -13,6 +13,7 @@ from app.api.dependency import (
 from app.models import User
 from app.schemas import (
     LoginRequest,
+    RefreshRequest,
     RegisterRequest,
     TokenResponse,
     UserResponse,
@@ -43,8 +44,23 @@ async def login(
         username=form_data.username,
         password=form_data.password,
     )
-    token = await service.login(login_data)
-    return TokenResponse(access_token=token)
+    access_token, refresh_token = await service.login(login_data)
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+    )
+
+
+@router.post("/refresh", response_model=TokenResponse)
+async def refresh_tokens(
+    data: RefreshRequest,
+    service: Annotated[AuthService, Depends(get_auth_service)],
+) -> TokenResponse:
+    access_token, refresh_token = await service.refresh(data.refresh_token)
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+    )
 
 
 @router.get("/me", response_model=UserResponse)

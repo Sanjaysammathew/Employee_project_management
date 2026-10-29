@@ -127,8 +127,9 @@ values and safely handles URL characters in the raw password.
 running tests: the test fixtures create and drop tables there. The application
 metadata is configured with `APP_NAME` and `APP_VERSION`. Authentication
 settings are `JWT_SECRET_KEY`, `JWT_ALGORITHM`, and
-`JWT_ACCESS_TOKEN_EXPIRE_MINUTES`; use a unique secret of at least 32
-characters outside tests.
+`JWT_ACCESS_TOKEN_EXPIRE_MINUTES`. `JWT_REFRESH_TOKEN_EXPIRE_DAYS` controls
+refresh token lifetime and defaults to 7 days. Use a unique secret of at least
+32 characters outside tests.
 
 Apply the existing migrations after configuring the database:
 
@@ -173,7 +174,10 @@ startup and ignored by Git.
 
 - `POST /auth/register` creates a user with a securely hashed password.
 - `POST /auth/login` accepts OAuth2 form fields (`username` and `password`);
-  the username field also accepts the registered email address.
+  the username field also accepts the registered email address. It returns an
+  access token and a refresh token.
+- `POST /auth/refresh` accepts a JSON `refresh_token` and returns a rotated
+  access token and refresh token pair.
 - `GET /auth/me` requires a bearer access token.
 - New accounts receive the `user` role. Protect endpoints with
   `require_roles("admin")` from `app.api.dependency.auth_dependencies`; only

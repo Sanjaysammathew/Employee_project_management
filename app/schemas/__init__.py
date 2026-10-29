@@ -9,6 +9,7 @@ from app.schemas.employee_schema import (
 )
 from app.schemas.auth_schema import (
     LoginRequest,
+    RefreshRequest,
     RegisterRequest,
     TokenResponse,
     UserResponse,
@@ -16,6 +17,7 @@ from app.schemas.auth_schema import (
 
 __all__ = [
     "LoginRequest",
+    "RefreshRequest",
     "RegisterRequest",
     "TokenResponse",
     "UserResponse",

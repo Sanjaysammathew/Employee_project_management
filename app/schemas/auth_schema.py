@@ -15,11 +15,6 @@ class RegisterRequest(BaseModel):
     def normalize_username(cls, value: object) -> object:
         return value.strip().lower() if isinstance(value, str) else value
 
-    @field_validator("email", mode="before")
-    @classmethod
-    def normalize_email(cls, value: object) -> object:
-        return value.strip().lower() if isinstance(value, str) else value
-
 
 class LoginRequest(BaseModel):
     username: str = Field(min_length=1, max_length=255)
@@ -33,7 +28,12 @@ class LoginRequest(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str = "bearer"
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str = Field(min_length=1)
 
 
 class UserResponse(BaseModel):
