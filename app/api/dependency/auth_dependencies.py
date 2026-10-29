@@ -1,7 +1,7 @@
 from collections.abc import Awaitable, Callable
 
 from fastapi import Depends
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import decode_access_token
@@ -15,10 +15,7 @@ from app.repositories import UserRepository
 from app.repositories.interface import UserInterface
 from app.services import AuthService
 
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/auth/login",
-    auto_error=False,
-)
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 def get_user_repository(
@@ -34,13 +31,13 @@ def get_auth_service(
 
 
 async def get_current_user(
-    token: str | None = Depends(oauth2_scheme),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     repository: UserInterface = Depends(get_user_repository),
 ) -> User:
-    if token is None:
+    if credentials is None:
         raise InvalidAccessTokenError("Invalid or missing access token")
 
-    subject = decode_access_token(token)
+    subject = decode_access_token(credentials.credentials)
 
     user = await repository.get_by_id(int(subject))
     if user is None:

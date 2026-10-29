@@ -37,14 +37,10 @@ async def register(
 
 @router.post("/login", response_model=TokenResponse)
 async def login(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    data: LoginRequest,
     service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> TokenResponse:
-    login_data = LoginRequest(
-        username=form_data.username,
-        password=form_data.password,
-    )
-    access_token, refresh_token = await service.login(login_data)
+    access_token, refresh_token = await service.login(data)
     return TokenResponse(
         access_token=access_token,
         refresh_token=refresh_token,
