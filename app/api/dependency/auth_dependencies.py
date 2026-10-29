@@ -4,12 +4,12 @@ from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import (
-    get_db,
+from app.core import (
     InvalidAccessTokenError,
     JWTConfigurationError,
     decode_access_token,
 )
+from app.database import get_db
 from app.models import User
 from app.repositories import UserRepository
 from app.repositories.interface import UserInterface

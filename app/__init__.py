@@ -1,5 +1,5 @@
 """Top-level application package."""
 
-from app.config.database import Base, SessionLocal, engine
+from app.database import Base, SessionLocal, engine
 
 __all__ = ["Base", "SessionLocal", "engine"]

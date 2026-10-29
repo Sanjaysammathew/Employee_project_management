@@ -2,12 +2,18 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app import Base, engine
+from app.core import settings
+from app.database import Base, engine
 
 # Import models so SQLAlchemy registers their tables.
 from app.models import Employee, Projects, User, employee_project
 
-from app.api import auth_router, employee_router, project_router
+from app.api import (
+    auth_router,
+    employee_router,
+    health_router,
+    project_router,
+)
 
 
 @asynccontextmanager
@@ -21,13 +27,15 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Employee Project API",
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
     lifespan=lifespan,
 )
 
 app.include_router(employee_router)
 app.include_router(project_router)
 app.include_router(auth_router)
+app.include_router(health_router)
 
 
 @app.get("/")

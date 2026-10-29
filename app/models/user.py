@@ -1,7 +1,7 @@
 from sqlalchemy import CheckConstraint, Integer, String, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.config import Base
+from app.database import Base
 
 
 class User(Base):

@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from app.config import (
+from app.core import (
     JWTConfigurationError,
     create_access_token,
     hash_password,

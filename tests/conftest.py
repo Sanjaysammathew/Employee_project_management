@@ -12,9 +12,10 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.pool import NullPool
-from app.config import Base, get_db, settings
+from app.core import settings
+from app.database import Base, get_db
 from app.models import Employee, Projects, User, employee_project
-from main import app
+from app.main import app
 
 load_dotenv()
 

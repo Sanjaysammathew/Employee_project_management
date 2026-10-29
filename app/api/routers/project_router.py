@@ -1,7 +1,9 @@
+"""Project API routes."""
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import get_db
+from app.database import get_db
 from app.api.dependency import get_project_service
 from app.repositories.interface import ProjectInterface
 from app.schemas import ProjectCreate, ProjectResponse

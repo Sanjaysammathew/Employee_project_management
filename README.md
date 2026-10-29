@@ -1,55 +1,177 @@
-# Employee Project API
+# Employee Management API
 
-## Setup
+FastAPI service for managing employees and projects, with PostgreSQL persistence,
+JWT-based authentication, and Alembic migrations.
 
-1. Create and activate a virtual environment (at the project root):
-   ```
-   python -m venv venv
-   venv\Scripts\activate
-   ```
-2. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-3. Create a `.env` file in the project root:
-   ```
-   DATABASE_NAME=employee_project_db
-   DATABASE_USER=<postgres-user>
-   DATABASE_PASSWORD=<raw-postgres-password>
-   DATABASE_HOST=127.0.0.1
-   DATABASE_PORT=5432
-   DATABASE_DRIVER=postgresql+asyncpg
-   TEST_DATABASE_URL=postgresql+asyncpg://<test-user>:<test-password>@127.0.0.1:5432/employee_project_test_db
-   ```
-   `DATABASE_URL` is assembled from these values by `app/config/config.py`.
-   Set `DATABASE_PASSWORD` to the raw password; URL escaping is handled for you.
-4. Create the databases in PostgreSQL, then apply migrations:
-   ```
-   alembic upgrade head
-   ```
+## Technology stack
 
-## Run
+- Python, FastAPI, and Uvicorn
+- Pydantic Settings for environment-based configuration
+- SQLAlchemy's async ORM with PostgreSQL and `asyncpg`
+- Alembic for database migrations
+- Pytest and FastAPI's `TestClient`
 
-Always run from the project root:
+## Project structure
+
+```text
+project-root/
+├── app/
+│   ├── __init__.py
+│   ├── main.py                 # FastAPI app, lifespan, and router registration
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── dependency/
+│   │   │   ├── __init__.py
+│   │   │   ├── auth_dependencies.py
+│   │   │   └── dependencies.py
+│   │   └── routers/
+│   │       ├── __init__.py
+│   │       ├── auth_router.py
+│   │       ├── employee_router.py
+│   │       ├── health_router.py
+│   │       └── project_router.py
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py           # Pydantic application and database settings
+│   │   └── security.py         # Password hashing and JWT helpers
+│   ├── database/
+│   │   ├── __init__.py
+│   │   └── database.py         # SQLAlchemy engine, sessions, Base, and get_db
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── association.py
+│   │   ├── employee.py
+│   │   ├── projects.py
+│   │   └── user.py
+│   ├── repositories/
+│   │   ├── __init__.py
+│   │   ├── implement/
+│   │   │   ├── __init__.py
+│   │   │   ├── employee_repository.py
+│   │   │   ├── project_repository.py
+│   │   │   └── user_repository.py
+│   │   └── interface/
+│   │       ├── __init__.py
+│   │       ├── employee_interface.py
+│   │       ├── project_interface.py
+│   │       └── user_interface.py
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   ├── auth_schema.py
+│   │   ├── employee_schema.py
+│   │   └── project_schema.py
+│   └── services/
+│       ├── __init__.py
+│       ├── auth_service.py
+│       ├── employee_service.py
+│       └── project_service.py
+├── alembic/
+│   ├── README
+│   ├── env.py
+│   ├── script.py.mako
+│   └── versions/               # Existing database migration history
+│       ├── 05906637057c_create_employee_tables.py
+│       ├── 375daf279dc2_updated_title_in_projects.py
+│       ├── 4c1d8a7e2f90_replace_created_at_with_role.py
+│       ├── 9a4b2c7d1e6f_create_users_table.py
+│       ├── 9bcc1e7fc2a1_added_column_credits_in_projects.py
+│       ├── e4bf19a77c31_replace_date_fields_with_department_and_budget.py
+│       └── ee381d7b2572_dropped_coloumn.py
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_employees.py
+│   └── test_health.py
+├── .env                        # Local settings; ignored by Git
+├── .env.example                # Safe environment-variable template
+├── .gitignore
+├── alembic.ini
+├── employee.sql
+├── README.md
+└── requirements.txt
 ```
-uvicorn main:app --reload
+
+## Installation
+
+Run commands from the project root:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+## Environment and database setup
+
+Create a local `.env` from `.env.example` if you do not already have one:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Do not replace an existing `.env`; keep its local credentials and update values
+as needed. `.env` is ignored by Git. Set `DATABASE_NAME`, `DATABASE_USER`,
+`DATABASE_PASSWORD`, `DATABASE_HOST`, and `DATABASE_PORT` for a PostgreSQL
+database that already exists. `DATABASE_DRIVER` defaults to
+`postgresql+asyncpg`. The application builds its SQLAlchemy URL from these
+values and safely handles URL characters in the raw password.
+
+`TEST_DATABASE_URL` must point to a separate, dedicated test database before
+running tests: the test fixtures create and drop tables there. The application
+metadata is configured with `APP_NAME` and `APP_VERSION`. Authentication
+settings are `JWT_SECRET_KEY`, `JWT_ALGORITHM`, and
+`JWT_ACCESS_TOKEN_EXPIRE_MINUTES`; use a unique secret of at least 32
+characters outside tests.
+
+Apply the existing migrations after configuring the database:
+
+```powershell
+alembic upgrade head
+```
+
+The checked-in migration history currently references the missing revision
+`d0778f02d3fd` from
+`alembic/versions/e4bf19a77c31_replace_date_fields_with_department_and_budget.py`.
+Restore that existing migration before applying upgrades; this refactor does
+not modify or generate migrations.
+
+## Run the application
+
+Run this command from the project root (the directory containing `app/`),
+not from inside `app/`:
+
+```powershell
+uvicorn app.main:app --reload
+```
+
+Interactive Swagger documentation is available at
+<http://127.0.0.1:8000/docs> (ReDoc: <http://127.0.0.1:8000/redoc>).
+
+## Health check
+
+`GET /health/` is public and does not require authentication. It returns:
+
+```json
+{
+  "status": "healthy",
+  "message": "Application is running"
+}
 ```
 
 ## Authentication
 
-Set these values in the root `.env` file. Use a unique random JWT secret of at
-least 32 characters, and do not commit `.env`:
-
-```
-JWT_SECRET_KEY=<at-least-32-character-random-secret>
-JWT_ALGORITHM=HS256
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
-```
-
 - `POST /auth/register` creates a user with a securely hashed password.
-- `POST /auth/login` accepts OAuth2 form fields (`username` and `password`); the
-  username field also accepts the registered email address.
+- `POST /auth/login` accepts OAuth2 form fields (`username` and `password`);
+  the username field also accepts the registered email address.
 - `GET /auth/me` requires a bearer access token.
-- New accounts receive the `user` role. Use `require_roles("admin")` from
-  `app.api.dependency.auth_dependencies` to protect an endpoint; assign the
-  `admin` role only to trusted accounts using a controlled database operation.
+- New accounts receive the `user` role. Protect endpoints with
+  `require_roles("admin")` from `app.api.dependency.auth_dependencies`; only
+  trusted accounts should be assigned the `admin` role.
+
+## Tests
+
+With the dedicated test database configured in `TEST_DATABASE_URL`, run:
+
+```powershell
+pytest
+```

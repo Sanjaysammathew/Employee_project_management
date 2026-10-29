@@ -6,6 +6,8 @@ from sqlalchemy.engine import URL
 
 
 class Settings(BaseSettings):
+    APP_NAME: str = "Employee Management API"
+    APP_VERSION: str = "1.0.0"
     DATABASE_NAME: str
     DATABASE_USER: str
     DATABASE_PASSWORD: SecretStr

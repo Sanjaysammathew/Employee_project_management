@@ -1,6 +1,6 @@
 from fastapi import Depends
 
-from app.config import get_db
+from app.database import get_db
 from app.repositories import EmployeeRepository, ProjectRepository
 from app.repositories.interface import EmployeeInterface, ProjectInterface
 from sqlalchemy.ext.asyncio import AsyncSession
