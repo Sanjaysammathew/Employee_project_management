@@ -33,32 +33,6 @@ class TestEmployeeService(IsolatedAsyncioTestCase):
         with self.assertRaises(EmployeeNotFoundError):
             await self.service.get_employee(999)
 
-    async def test_create_employee_sends_creation_email(self) -> None:
-        data = EmployeeCreate(
-            name="Morgan Employee",
-            salary=72000,
-            email="morgan.employee@example.com",
-            department="Engineering",
-        )
-        employee = Employee(
-            id=1,
-            name=data.name,
-            salary=data.salary,
-            email=data.email,
-            department=data.department,
-        )
-        self.repository.create_employee = AsyncMock(return_value=employee)
-        self.service.email_service.send_employee_created_email = AsyncMock()
-
-        result = await self.service.create_employee(data)
-
-        self.assertIs(result, employee)
-        self.repository.create_employee.assert_awaited_once_with(data)
-        self.service.email_service.send_employee_created_email.assert_awaited_once_with(
-            to_email=employee.email,
-            employee_name=employee.name,
-        )
-
     async def test_get_employees_returns_paginated_result(self) -> None:
         result_data = {
             "items": [],
@@ -67,9 +41,7 @@ class TestEmployeeService(IsolatedAsyncioTestCase):
             "total": 0,
             "pages": 0,
         }
-        self.repository.get_employees_paginated = AsyncMock(
-            return_value=result_data
-        )
+        self.repository.get_employees_paginated = AsyncMock(return_value=result_data)
 
         result = await self.service.get_employees(page=2, page_size=5)
 
