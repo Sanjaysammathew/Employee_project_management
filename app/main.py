@@ -13,6 +13,11 @@ from app.exceptions.exception_handler import register_exception_handlers
 # Import models so SQLAlchemy registers their tables.
 from app.models import Employee, Projects, User, employee_project
 
+from fastapi import FastAPI, Request
+import time
+import logging
+import uuid
+
 from app.api import (
     auth_router,
     employee_router,
@@ -41,12 +46,7 @@ app = FastAPI(
 )
 
 
-from fastapi import FastAPI, Request
-import time
-import logging
-import uuid
-
-app = FastAPI()
+app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION)
 
 logger = logging.getLogger(__name__)
 

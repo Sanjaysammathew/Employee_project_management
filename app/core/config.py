@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: Literal["HS256"] = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30, gt=0)
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = Field(default=7, gt=0)
+    SMTP_HOST: str
+    SMTP_PORT: int
+    SMTP_USERNAME: str
+    SMTP_PASSWORD: SecretStr
+    MAIL_FROM: str
 
     @property
     def database_url(self) -> str:

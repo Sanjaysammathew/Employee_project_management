@@ -1,3 +1,6 @@
+import logging
+import smtplib
+
 from app.exceptions.custom_exceptions import (
     EmployeeNotFoundError,
     NotFoundError,
@@ -5,14 +8,34 @@ from app.exceptions.custom_exceptions import (
 from app.models import Employee
 from app.repositories.interface import EmployeeInterface
 from app.schemas import EmployeeCreate
+from app.services.email_service import EmailService
+
+logger = logging.getLogger(__name__)
 
 
 class EmployeeService:
     def __init__(self, repository: EmployeeInterface):
         self.repository = repository
+        self.email_service = EmailService()
 
     async def create_employee(self, data: EmployeeCreate) -> Employee:
-        return await self.repository.create_employee(data)
+        employee = await self.repository.create_employee(data)
+
+        if employee.email:
+            try:
+                await self.email_service.send_employee_created_email(
+                    to_email=employee.email,
+                    employee_name=employee.name,
+                )
+            except (OSError, smtplib.SMTPException):
+                # The employee is already committed; email failure should not
+                # make the API report that employee creation failed.
+                logger.exception(
+                    "Failed to send employee creation email for employee %s",
+                    employee.id,
+                )
+
+        return employee
 
     async def delete_employee(self, employee_id: int) -> Employee:
         employee = await self.repository.delete_employee(employee_id)

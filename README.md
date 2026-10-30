@@ -131,6 +131,15 @@ settings are `JWT_SECRET_KEY`, `JWT_ALGORITHM`, and
 refresh token lifetime and defaults to 7 days. Use a unique secret of at least
 32 characters outside tests.
 
+Employee-created emails use `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`,
+`SMTP_PASSWORD`, and `MAIL_FROM`. For Gmail, use `smtp.gmail.com` with port
+587 (STARTTLS) or 465 (implicit TLS), and authenticate with the account email
+and a Google App Password rather than the normal account password. App
+Passwords require 2-Step Verification and may be unavailable for managed
+accounts. Keep `MAIL_FROM` set to the authenticated account. Email failures
+are logged in `logs/app.log`; employee creation still succeeds because its
+database transaction is already committed before the email is sent.
+
 Apply the existing migrations after configuring the database:
 
 ```powershell

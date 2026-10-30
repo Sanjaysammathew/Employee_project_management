@@ -1,4 +1,15 @@
+import pytest
 from fastapi.testclient import TestClient
+
+from app.services.email_service import EmailService
+
+
+@pytest.fixture(autouse=True)
+def prevent_real_email(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def skip_email(self, to_email: str, employee_name: str) -> None:
+        return None
+
+    monkeypatch.setattr(EmailService, "send_employee_created_email", skip_email)
 
 
 def _employee_payload(
