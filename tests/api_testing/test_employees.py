@@ -1,16 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app.services.email_service import EmailService
-
-
-@pytest.fixture(autouse=True)
-def prevent_real_email(monkeypatch: pytest.MonkeyPatch) -> None:
-    async def skip_email(self, to_email: str, employee_name: str) -> None:
-        return None
-
-    monkeypatch.setattr(EmailService, "send_employee_created_email", skip_email)
-
 
 def _employee_payload(
     name: str = "Morgan Employee",
@@ -124,9 +114,7 @@ def test_assign_missing_project(
     )
 
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": "Employee or one or more projects not found"
-    }
+    assert response.json() == {"detail": "Employee or one or more projects not found"}
 
 
 def test_extend_projects(
@@ -189,9 +177,7 @@ def test_delete(client: TestClient) -> None:
     detail_response = client.get(f"/employees/{created['id']}")
 
     assert delete_response.status_code == 200
-    assert delete_response.json() == {
-        "message": "Employee deleted successfully"
-    }
+    assert delete_response.json() == {"message": "Employee deleted successfully"}
     assert detail_response.status_code == 404
 
 
